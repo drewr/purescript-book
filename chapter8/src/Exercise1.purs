@@ -6,7 +6,7 @@ import Data.Maybe (Maybe(..))
 
 third :: forall a. Array a -> Maybe a
 third xs = do
-  as <- tail xs
-  bs <- tail as
-  c <- head bs
-  pure c
+  ys <- tail xs
+  zs <- tail ys
+  z <- head zs
+  pure z
