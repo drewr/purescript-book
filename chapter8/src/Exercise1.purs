@@ -3,6 +3,7 @@ module Exercise1 where
 import Prelude
 import Data.Array (head, tail)
 import Data.Maybe (Maybe(..))
+import Data.List
 
 third :: forall a. Array a -> Maybe a
 third xs = do
@@ -33,3 +34,9 @@ third xs = do
 -- > apply (Just (\x -> x + 1)) (Just 1)
 -- (Just 2)
 
+filterM :: forall m a. Monad m => (a -> m Boolean) -> List a -> m (List a)
+filterM _ Nil = pure Nil
+filterM f (x:xs) = do
+  b <- f x
+  xs' <- filterM f xs
+  pure if b then x : xs' else xs'

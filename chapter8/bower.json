@@ -23,7 +23,8 @@
     "purescript-react-dom": "^1.0.0",
     "purescript-react": "^1.0.0",
     "purescript-strings": "^1.0.0",
-    "purescript-validation": "^1.0.0"
+    "purescript-validation": "^1.0.0",
+    "purescript-lists": "^1.0.1"
   },
   "devDependencies": {
     "purescript-psci-support": "^1.0.0"
