@@ -25,7 +25,8 @@
     "purescript-strings": "^1.0.0",
     "purescript-validation": "^1.0.0",
     "purescript-lists": "^1.0.1",
-    "purescript-random": "^1.0.0"
+    "purescript-random": "^1.0.0",
+    "purescript-math": "^2.0.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^1.0.0"
