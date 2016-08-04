@@ -5,10 +5,10 @@ import Math (sqrt, pow)
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
 import Control.Monad.Eff (Eff, forE)
-import Control.Monad.Eff.Console (CONSOLE, logShow)
+import Control.Monad.Eff.Console (CONSOLE, log, logShow)
 import Control.Monad.Eff.Random (RANDOM, random)
 import Control.Monad.Eff.Exception (EXCEPTION, throwException, error)
-import Control.Monad.ST (ST, newSTRef, readSTRef, modifySTRef)
+import Control.Monad.ST (ST, STRef, newSTRef, readSTRef, modifySTRef)
 
 safeDivide :: forall eff. Int -> Int -> Eff (err :: EXCEPTION | eff) (Maybe Int)
 safeDivide _ 0 = throwException (error "no divide by zero")
@@ -16,6 +16,12 @@ safeDivide n m = pure $ Just (n / m)
 
 type Successes = Int
 type Attempts = Int
+
+type Report =
+  { successful :: Successes
+  , attempted :: Attempts
+  , inCircle :: Boolean
+  }
 
 data Point = Point
  { x :: Number
@@ -44,30 +50,38 @@ pointInCircle p = (distance p center) <= radius
 calcPi :: Successes -> Attempts -> Number
 calcPi succ att = 4.0 * ((toNumber succ) / (toNumber att))
 
+logRef :: forall h eff.
+             STRef h Report
+             -> Point
+             -> Eff ( console :: CONSOLE, st :: ST h | eff ) Unit
+logRef ref pt = do
+  tmp <- readSTRef ref
+  let succ = tmp.successful
+      att = tmp.attempted
+      inOrOut = if tmp.inCircle then "IN" else "OUT"
+      pi = calcPi succ att
+  log $
+    show att <> "(" <> inOrOut <> "): " <>
+    show pt <> " att: " <> show att <> " succ: " <> show succ <> " pi: " <>
+    show pi
+
 main :: forall eff h. Eff ( console :: CONSOLE
                           , random :: RANDOM
                           , st :: ST h
                           | eff
                           )
-                      Unit
+                          Unit
 main = do
-  ref <- newSTRef { successful: 0, attempted: 0 }
+  ref <- newSTRef { successful: 0, attempted: 0, inCircle: false }
   forE 0 3000000 $ \i -> do
     pt <- makePoint
     let inCircle = pointInCircle pt
     modifySTRef ref \o ->
       { successful: if inCircle then o.successful + 1 else o.successful
       , attempted: o.attempted + 1
+      , inCircle: inCircle
       }
-    tmp <- readSTRef ref
-    let succ = tmp.successful
-        att = tmp.attempted
-        inOrOut = if inCircle then "IN" else "OUT"
-        pi = calcPi succ att
-    -- logShow $
-    --   show i <> "(" <> inOrOut <> "): " <>
-    --   show pt <> " att: " <> show att <> " succ: " <> show succ <> " pi: " <>
-    --   show pi
+    logRef ref pt
     pure unit
   tmp <- readSTRef ref
   let succ = tmp.successful
