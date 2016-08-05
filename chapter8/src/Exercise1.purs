@@ -2,7 +2,7 @@ module Exercise1 where
 
 import Prelude
 import Data.Array (head, tail)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe)
 import Data.List (List(..), (:))
 
 third :: forall a. Array a -> Maybe a
