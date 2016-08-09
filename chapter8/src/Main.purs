@@ -65,8 +65,8 @@ addressBook :: forall props. ReactClass props
 addressBook = createClass $ spec initialState \ctx -> do
   AppState { person: Person person@{ homeAddress: Address address }, errors } <- readState ctx
 
-  let renderValidationError err = D.div [ P.className "alert alert-danger" ]
-                                        [ D.text err ]
+  let renderValidationError err =
+        D.div [ P.className "alert alert-danger" ] [ D.text (show err) ]
 
       renderValidationErrors = map renderValidationError
 
