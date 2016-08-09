@@ -5,8 +5,9 @@ import Prelude
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
 import Data.AddressBook (Address(..), Person(..), PhoneNumber(..), examplePerson)
-import Data.AddressBook.Validation (Errors, validatePerson')
-import Data.Array ((..), length, modifyAt, zipWith)
+import Data.AddressBook.Validation (ValidationError(..), Errors, Field(..),
+                                    hint, validatePerson')
+import Data.Array ((..), length, modifyAt, zipWith, filter)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Foreign (F, readString, toForeign)
@@ -20,7 +21,7 @@ import DOM.HTML.Window (document)
 import DOM.Node.NonElementParentNode (getElementById)
 import DOM.Node.Types (ElementId(..), documentToNonElementParentNode)
 import Partial.Unsafe (unsafePartial)
-import React (ReactClass, ReadWrite, ReactState, Event, ReactThis,
+import React (ReactClass, ReadWrite, ReactState, Event, ReactThis, ReactElement,
               createFactory, readState, spec, createClass, writeState)
 import React.DOM as D
 import React.DOM.Props as P
@@ -68,25 +69,35 @@ addressBook = createClass $ spec initialState \ctx -> do
   let renderValidationError err =
         D.div [ P.className "alert alert-danger" ] [ D.text (show err) ]
 
-      renderValidationErrors = map renderValidationError
+      renderValidationErrors :: Field -> Errors -> Array ReactElement
+      renderValidationErrors field errs = map renderValidationError $ onlyMatchingValidationErrors field errs
 
-      formField name hint value update =
-        D.div [ P.className "form-group" ]
-              [ D.label [ P.className "col-sm-2 control-label" ]
-                        [ D.text name ]
-              , D.div [ P.className "col-sm-3" ]
+      onlyMatchingValidationErrors :: Field -> Errors -> Errors
+      onlyMatchingValidationErrors field = filter \(ValidationError msg field') -> field == field'
+
+      fieldHasError :: Field -> Errors -> Boolean
+      fieldHasError field errs = length (onlyMatchingValidationErrors field errs) > 0
+
+      formField field value update =
+        D.div [ P.className "form-group" ] (if (fieldHasError field errors)
+                                               then els <> (renderValidationErrors field errors)
+                                               else els)
+        where els = [ D.label [ P.className "col-sm-2 control-label" ]
+                              [ D.text (show field) ]
+                    , D.div [ P.className "col-sm-3" ]
                       [ D.input [ P._type "text"
                                 , P.className "form-control"
-                                , P.placeholder hint
+                                , P.placeholder (hint field)
                                 , P.value value
                                 , P.onChange (updateAppState ctx update)
                                 ] []
                       ]
-              ]
+                    ]
 
       renderPhoneNumber (PhoneNumber phone) index =
-        formField (show phone."type") "XXX-XXX-XXXX" phone.number \s ->
+        formField f phone.number \s ->
           Person $ person { phones = fromMaybe person.phones $ modifyAt index (updatePhoneNumber s) person.phones }
+        where f = (PhoneField phone."type")
 
       updateFirstName s = Person $ person { firstName = s }
       updateLastName  s = Person $ person { lastName  = s }
@@ -100,25 +111,22 @@ addressBook = createClass $ spec initialState \ctx -> do
   pure $
     D.div [ P.className "container" ]
           [ D.div [ P.className "row" ]
-                  (renderValidationErrors errors)
-          , D.div [ P.className "row" ]
                   [ D.form [ P.className "form-horizontal" ] $
                            [ D.h3' [ D.text "Basic Information" ]
 
-                           , formField "First Name" "First Name" person.firstName updateFirstName
-                           , formField "Last Name"  "Last Name"  person.lastName  updateLastName
+                           , formField FirstNameField person.firstName updateFirstName
+                           , formField LastNameField  person.lastName  updateLastName
 
                            , D.h3' [ D.text "Address" ]
 
-                           , formField "Street" "Street" address.street updateStreet
-                           , formField "City"   "City"   address.city   updateCity
-                           , formField "State"  "State"  address.state  updateState
+                           , formField StreetField address.street updateStreet
+                           , formField CityField   address.city   updateCity
+                           , formField StateField  address.state  updateState
 
                            , D.h3' [ D.text "Contact Information" ]
                            ]
                            <> zipWith renderPhoneNumber person.phones (0 .. length person.phones)
-                  ]
-          ]
+                  ] ]
 
 main :: Eff ( console :: CONSOLE
             , dom :: DOM

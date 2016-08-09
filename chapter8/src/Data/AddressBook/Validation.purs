@@ -30,8 +30,25 @@ instance showField :: Show Field where
   show StateField     = "state"
   show (PhoneField o) = show o
 
+instance eqField :: Eq Field where
+  eq FirstNameField FirstNameField = true
+  eq LastNameField LastNameField   = true
+  eq StreetField StreetField       = true
+  eq CityField CityField           = true
+  eq StateField StateField         = true
+  eq (PhoneField o1) (PhoneField o2) = true
+  eq _ _                           = false
+
 instance showValidationError :: Show ValidationError where
   show (ValidationError msg field) = "Field '" <> show field <> "' " <> msg
+
+hint :: Field -> String
+hint FirstNameField = "John"
+hint LastNameField  = "Smith"
+hint StreetField    = "Main St"
+hint CityField      = "Nashville"
+hint StateField     = "TN"
+hint (PhoneField o) = "XXX-XXX-XXXX"
 
 nonEmpty :: Field -> String -> V Errors Unit
 nonEmpty field "" = invalid [(ValidationError "must not be empty" field)]
