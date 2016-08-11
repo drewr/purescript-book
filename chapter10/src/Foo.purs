@@ -13,13 +13,17 @@ newtype FormData = FormData
   }
 
 instance formDataIsForeign :: IsForeign FormData where
-  read value = do
-    firstName   <- readProp "firstName" value
-    lastName    <- readProp "lastName"  value
-    age         <- readProp "age"       value
-    pure $ FormData
-      { firstName
-      , lastName
-      , age
-      }
+  read value = makeFormData <$> readProp "firstName" value
+                            <*> readProp "lastName"  value
+                            <*> readProp "age"       value
 
+instance showFormData :: Show FormData where
+  show (FormData fd) = "FormData: " <> fd.lastName
+                       <> ", " <> fd.firstName
+                       <> " (" <> show fd.age <> ")"
+
+makeFormData :: String -> String -> Int -> FormData
+makeFormData fn ln ag = FormData { firstName: fn
+                                 , lastName: ln
+                                 , age: ag
+                                 }
