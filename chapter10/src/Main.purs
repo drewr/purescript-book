@@ -65,24 +65,34 @@ newtype FormData = FormData
   , cellPhone  :: String
   }
 
+mkFormData :: String
+           -> String
+           -> String
+           -> String
+           -> String
+           -> String
+           -> String
+           -> FormData
+mkFormData a b c d e f g =
+  FormData
+  { firstName: a
+  , lastName:  b
+  , street:    c
+  , city:      d
+  , state:     e
+  , homePhone: f
+  , cellPhone: g
+  }
+
 instance formDataIsForeign :: IsForeign FormData where
-  read value = do
-    firstName   <- readProp "firstName" value
-    lastName    <- readProp "lastName"  value
-    street      <- readProp "street"    value
-    city        <- readProp "city"      value
-    state       <- readProp "state"     value
-    homePhone   <- readProp "homePhone" value
-    cellPhone   <- readProp "cellPhone" value
-    pure $ FormData
-      { firstName
-      , lastName
-      , street
-      , city
-      , state
-      , homePhone
-      , cellPhone
-      }
+  read value = mkFormData
+                 <$> readProp "firstName" value
+                 <*> readProp "lastName"  value
+                 <*> readProp "street"    value
+                 <*> readProp "city"      value
+                 <*> readProp "state"     value
+                 <*> readProp "homePhone" value
+                 <*> readProp "cellPhone" value
 
 toFormData :: Partial => Person -> FormData
 toFormData (Person p@{ homeAddress: Address a
