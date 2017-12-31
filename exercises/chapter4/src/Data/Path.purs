@@ -1,5 +1,5 @@
 module Data.Path
-  ( Path()
+  ( Path(..)
   , root
   , ls
   , filename
@@ -8,12 +8,15 @@ module Data.Path
   ) where
 
 import Prelude
+import Data.Generic (class Generic)
 
 import Data.Maybe (Maybe(..))
 
 data Path
   = Directory String (Array Path)
   | File String Int
+
+derive instance genericPath :: Generic Path
 
 instance showPath :: Show Path where
   show = filename

@@ -19,7 +19,9 @@
   "dependencies": {
     "purescript-arrays": "^4.0.0",
     "purescript-strings": "^3.0.0",
-    "purescript-console": "^3.0.0"
+    "purescript-console": "^3.0.0",
+    "purescript-foreign-generic": "^5.0.0",
+    "purescript-generics": "^4.0.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^3.0.0"
