@@ -2,11 +2,14 @@ module FileOperations where
 
 import Prelude
 
-import Data.Array (concatMap, filter, foldl, (:))
+import Control.MonadZero (guard)
+import Data.Array (concatMap, filter, foldl, null, (:))
+import Partial.Unsafe (unsafePartial)
+import Data.Array.Partial as DP
 import Data.Generic (class Generic, gShow)
 import Data.Maybe (Maybe(..))
-import Data.Path (Path(..), ls, isDirectory, size)
 import Data.Newtype (class Newtype, unwrap, wrap)
+import Data.Path (Path(..), ls, isDirectory, size, filename, root)
 
 newtype Acc = Acc
               { biggest  :: Path
@@ -30,6 +33,9 @@ allFiles' file = file : do
 onlyFiles :: Path -> Array Path
 onlyFiles = allFiles >>> filter (not isDirectory)
 
+onlyDirectories :: Path -> Array Path
+onlyDirectories = allFiles >>> filter isDirectory
+
 biggestAndSmallest :: Path -> Acc
 biggestAndSmallest path =
   foldl (\acc p ->
@@ -48,6 +54,19 @@ biggestAndSmallest path =
 
         (Acc {
           biggest: (File ".start" 0)
-        , smallest: (File ".start" 9999999999)
+        , smallest: (File ".start" 999999999)
         })
         (onlyFiles path)
+
+whereIs :: String -> Maybe Path
+whereIs s = do
+  let x = dirsContainingMatch root s
+  if not null x
+    then Just (unsafePartial $ DP.last x)
+    else Nothing
+  where
+    dirsContainingMatch :: Path -> String -> Array Path
+    dirsContainingMatch p s = do
+      d <- onlyDirectories p
+      guard $ not null (filter (\f -> (filename f == s)) (ls d))
+      pure d
